@@ -28,13 +28,19 @@ app.get('/', (req, res) => {
   res.send('Hello World from Node.js 👋')
 })
 
+app.get('/eyumece_backend', (req, res) => {
+  res.send('It works')
+})
+
+const todosRouter = express.Router()
+
 // List all todos
-app.get('/todos', (req, res) => {
+todosRouter.get('/todos', (req, res) => { // READ
   res.json(readTodos())
 })
 
 // Add a new todo
-app.post('/todos', (req, res) => {
+todosRouter.post('/todos', (req, res) => { // CREATE
   const text = (req.body.text || '').trim()
   if (!text) {
     return res.status(400).json({ error: 'Text is required' })
@@ -46,8 +52,8 @@ app.post('/todos', (req, res) => {
   res.status(201).json(todo)
 })
 
-// Mark a todo as done / not done
-app.patch('/todos/:id', (req, res) => {
+// Mark a todo as done / not done  // UPDATE
+todosRouter.patch('/todos/:id', (req, res) => {
   const todos = readTodos()
   const todo = todos.find((t) => t.id === req.params.id)
   if (!todo) {
@@ -58,8 +64,22 @@ app.patch('/todos/:id', (req, res) => {
   res.json(todo)
 })
 
-// Delete a todo
-app.delete('/todos/:id', (req, res) => {
+// Change the text of a todo
+todosRouter.put('/todos/:id', (req, res) => {
+  const text = (req.body.text || '').trim()
+  if (!text) {
+    return res.status(400).json({ error: 'Text is required' })
+  }
+  const todos = readTodos()
+  const todo = todos.find((t) => t.id === req.params.id)
+  if (!todo) {
+    return res.status(404).json({ error: 'Todo not found' })
+  }
+  todo.text = text
+  saveTodos(todos)
+  res.json(todo)
+})// Delete a todo
+todosRouter.delete('/todos/:id', (req, res) => { // DELETE
   const todos = readTodos()
   const remaining = todos.filter((t) => t.id !== req.params.id)
   if (remaining.length === todos.length) {
@@ -68,6 +88,9 @@ app.delete('/todos/:id', (req, res) => {
   saveTodos(remaining)
   res.status(204).end()
 })
+
+app.use('/eyumece_backend', todosRouter)
+app.use('/', todosRouter)
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`)
